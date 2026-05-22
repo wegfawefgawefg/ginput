@@ -98,6 +98,7 @@ ReconcileReport reconcile_profile(InputProfile& profile, const Schema& schema) {
         valid_axes_2d.push_back(bind);
     }
     profile.axis_2d_binds = std::move(valid_axes_2d);
+    rebuild_lookup(profile);
 
     return report;
 }

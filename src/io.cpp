@@ -205,6 +205,7 @@ LoadProfilesResult load_profiles_string(std::string_view text, std::string_view 
                 Diagnostic{"skipped profile with missing id or name", 1, 1});
             continue;
         }
+        rebuild_lookup(profile);
         result.profiles.push_back(std::move(profile));
     }
 

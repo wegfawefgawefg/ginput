@@ -71,8 +71,17 @@ void test_profile_helpers() {
     require(ginput::add_button_bind(profile, ginput::ButtonBind{100, 2}),
             "allow same button to different action");
     require(profile.button_binds.size() == 2, "button bind count");
+    require(ginput::actions_for_button(profile, 100).size() == 2, "button lookup count");
+    require(ginput::actions_for_button(profile, 100)[0] == 1, "button lookup first action");
+    require(ginput::actions_for_button(profile, 100)[1] == 2, "button lookup second action");
     require(ginput::remove_button_bind(profile, ginput::ButtonBind{100, 1}), "remove bind");
     require(profile.button_binds.size() == 1, "button bind remove count");
+    require(ginput::actions_for_button(profile, 100).size() == 1, "button lookup after remove");
+
+    require(ginput::add_axis_1d_bind(profile, ginput::Axis1DBind{200, 3, -1.0f, 0.05f}),
+            "add 1d bind");
+    require(ginput::axes_for_1d(profile, 200).size() == 1, "1d lookup count");
+    require_near(ginput::axes_for_1d(profile, 200)[0].scale, -1.0f, "1d lookup scale");
 
     std::vector<ginput::InputProfile> profiles;
     require(ginput::add_profile(profiles, profile), "add profile");
@@ -144,8 +153,12 @@ void test_profile_io() {
     require(loaded.profiles.size() == 1, "load profile count");
     require(loaded.profiles[0].name == "Keyboard", "load profile name");
     require(loaded.profiles[0].button_binds.size() == 2, "load button bind count");
+    require(ginput::actions_for_button(loaded.profiles[0], 26).size() == 2,
+            "load rebuilds button lookup");
     require(loaded.profiles[0].axis_1d_binds.size() == 1, "load 1d bind count");
+    require(ginput::axes_for_1d(loaded.profiles[0], 1000).size() == 1, "load rebuilds 1d lookup");
     require(loaded.profiles[0].axis_2d_binds.size() == 1, "load 2d bind count");
+    require(ginput::axes_for_2d(loaded.profiles[0], 2000).size() == 1, "load rebuilds 2d lookup");
     require_near(loaded.profiles[0].axis_1d_binds[0].scale, -1.0f, "load 1d scale");
     require_near(loaded.profiles[0].axis_2d_binds[0].scale_y, -1.0f, "load 2d scale");
 

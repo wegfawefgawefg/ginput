@@ -76,10 +76,15 @@ std::string text;
 ginput::save_profiles_string(profiles, text);
 
 ginput::LoadProfilesResult loaded = ginput::load_profiles_string(text, schema);
+
+const std::vector<ginput::ActionId>& actions = ginput::actions_for_button(
+    loaded.profiles[0],
+    26);
 ```
 
 The host game still owns device polling and action consumption. `ginput` stores
-the profile and validates it against the schema.
+the profile, validates it against the schema, and keeps direct lookup tables on
+loaded profiles.
 
 ## Optional Adapters
 

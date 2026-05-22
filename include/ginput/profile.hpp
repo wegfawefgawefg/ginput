@@ -3,6 +3,7 @@
 #include "ginput/types.hpp"
 
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace ginput {
@@ -32,12 +33,19 @@ struct Vec2 {
     float y = 0.0f;
 };
 
+struct ProfileLookup {
+    std::unordered_map<EncodedControl, std::vector<ActionId>> button_actions;
+    std::unordered_map<EncodedControl, std::vector<Axis1DBind>> axes_1d;
+    std::unordered_map<EncodedControl, std::vector<Axis2DBind>> axes_2d;
+};
+
 struct InputProfile {
     int id = -1;
     std::string name;
     std::vector<ButtonBind> button_binds;
     std::vector<Axis1DBind> axis_1d_binds;
     std::vector<Axis2DBind> axis_2d_binds;
+    ProfileLookup lookup;
 };
 
 bool same_bind(const ButtonBind& a, const ButtonBind& b);
@@ -60,6 +68,13 @@ const InputProfile* find_profile_by_name(const std::vector<InputProfile>& profil
 
 bool add_profile(std::vector<InputProfile>& profiles, InputProfile profile);
 bool replace_profile(std::vector<InputProfile>& profiles, InputProfile profile);
+
+void rebuild_lookup(InputProfile& profile);
+const std::vector<ActionId>& actions_for_button(const InputProfile& profile,
+                                                EncodedControl device_button);
+const std::vector<Axis1DBind>& axes_for_1d(const InputProfile& profile, EncodedControl device_axis);
+const std::vector<Axis2DBind>& axes_for_2d(const InputProfile& profile,
+                                           EncodedControl device_stick);
 
 float apply_axis_transform(float value, float scale, float deadzone);
 Vec2 apply_stick_transform(Vec2 value, float scale_x, float scale_y, float deadzone);

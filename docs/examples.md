@@ -48,29 +48,38 @@ schema.add_axis_1d(Throttle, "Throttle", "Gameplay");
 schema.add_axis_2d(Aim, "Aim", "Gameplay");
 ```
 
-The host game samples devices and applies the current profile:
+The host game samples devices and asks the loaded profile what those controls
+mean. Profiles keep a direct lookup index, so this path does not need to scan
+every bind:
 
 ```cpp
 InputFrame frame{};
 
-for (const ginput::ButtonBind& bind : profile.button_binds) {
-    if (device_button_is_down(bind.device_button)) {
-        frame.down_actions.set(bind.action);
+for (ginput::EncodedControl pressed : host_pressed_buttons_this_frame) {
+    for (ginput::ActionId action : ginput::actions_for_button(profile, pressed)) {
+        frame.down_actions.set(action);
     }
 }
 
-for (const ginput::Axis1DBind& bind : profile.axis_1d_binds) {
-    float value = sample_axis_1d(bind.device_axis);
-    value = ginput::apply_axis_transform(value, bind.scale, bind.deadzone);
-    frame.axis_1d[bind.axis_1d] = choose_larger_magnitude(frame.axis_1d[bind.axis_1d], value);
+for (const SampledAxis1D& sampled : host_sampled_axes_1d) {
+    for (const ginput::Axis1DBind& bind : ginput::axes_for_1d(profile, sampled.control)) {
+        float value = ginput::apply_axis_transform(sampled.value, bind.scale, bind.deadzone);
+        frame.axis_1d[bind.axis_1d] = choose_larger_magnitude(frame.axis_1d[bind.axis_1d], value);
+    }
 }
 
-for (const ginput::Axis2DBind& bind : profile.axis_2d_binds) {
-    Vec2 value = sample_axis_2d(bind.device_stick);
-    value = ginput::apply_stick_transform(value, bind.scale_x, bind.scale_y, bind.deadzone);
-    frame.axis_2d[bind.axis_2d] = choose_larger_magnitude(frame.axis_2d[bind.axis_2d], value);
+for (const SampledAxis2D& sampled : host_sampled_axes_2d) {
+    for (const ginput::Axis2DBind& bind : ginput::axes_for_2d(profile, sampled.control)) {
+        ginput::Vec2 value =
+            ginput::apply_stick_transform(sampled.value, bind.scale_x, bind.scale_y, bind.deadzone);
+        frame.axis_2d[bind.axis_2d] = choose_larger_magnitude(frame.axis_2d[bind.axis_2d], value);
+    }
 }
 ```
+
+Loaded profiles have their lookup rebuilt automatically. If caller code edits
+the public bind vectors directly, call `ginput::rebuild_lookup(profile)` after
+the edit. The add/remove helpers keep the lookup in sync.
 
 Menu code reads menu action ids. Gameplay code reads gameplay action ids. There
 is no active context inside `ginput`.
