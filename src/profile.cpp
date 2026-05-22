@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <utility>
 
 namespace ginput {
 namespace {
@@ -87,6 +88,76 @@ bool remove_axis_2d_bind(InputProfile& profile, Axis2DBind bind) {
         return false;
     }
     profile.axis_2d_binds.erase(it);
+    return true;
+}
+
+InputProfile* find_profile(std::vector<InputProfile>& profiles, int id) {
+    for (InputProfile& profile : profiles) {
+        if (profile.id == id) {
+            return &profile;
+        }
+    }
+    return nullptr;
+}
+
+const InputProfile* find_profile(const std::vector<InputProfile>& profiles, int id) {
+    for (const InputProfile& profile : profiles) {
+        if (profile.id == id) {
+            return &profile;
+        }
+    }
+    return nullptr;
+}
+
+InputProfile* find_profile_by_name(std::vector<InputProfile>& profiles, const std::string& name) {
+    for (InputProfile& profile : profiles) {
+        if (profile.name == name) {
+            return &profile;
+        }
+    }
+    return nullptr;
+}
+
+const InputProfile* find_profile_by_name(const std::vector<InputProfile>& profiles,
+                                         const std::string& name) {
+    for (const InputProfile& profile : profiles) {
+        if (profile.name == name) {
+            return &profile;
+        }
+    }
+    return nullptr;
+}
+
+bool add_profile(std::vector<InputProfile>& profiles, InputProfile profile) {
+    if (profile.id <= 0 || profile.name.empty()) {
+        return false;
+    }
+    if (find_profile(profiles, profile.id) != nullptr) {
+        return false;
+    }
+    if (find_profile_by_name(profiles, profile.name) != nullptr) {
+        return false;
+    }
+    profiles.push_back(std::move(profile));
+    return true;
+}
+
+bool replace_profile(std::vector<InputProfile>& profiles, InputProfile profile) {
+    if (profile.id <= 0 || profile.name.empty()) {
+        return false;
+    }
+    for (const InputProfile& existing : profiles) {
+        if (existing.id != profile.id && existing.name == profile.name) {
+            return false;
+        }
+    }
+    for (InputProfile& existing : profiles) {
+        if (existing.id == profile.id) {
+            existing = std::move(profile);
+            return true;
+        }
+    }
+    profiles.push_back(std::move(profile));
     return true;
 }
 

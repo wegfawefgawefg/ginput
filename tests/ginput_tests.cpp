@@ -72,6 +72,18 @@ void test_profile_helpers() {
     require(profile.button_binds.size() == 2, "button bind count");
     require(ginput::remove_button_bind(profile, ginput::ButtonBind{100, 1}), "remove bind");
     require(profile.button_binds.size() == 1, "button bind remove count");
+
+    std::vector<ginput::InputProfile> profiles;
+    require(ginput::add_profile(profiles, profile), "add profile");
+    require(!ginput::add_profile(profiles, profile), "reject duplicate profile id");
+    require(ginput::find_profile(profiles, 7) != nullptr, "find profile by id");
+    require(ginput::find_profile_by_name(profiles, "Default") != nullptr, "find profile by name");
+
+    ginput::InputProfile replacement;
+    replacement.id = 7;
+    replacement.name = "Updated";
+    require(ginput::replace_profile(profiles, replacement), "replace profile");
+    require(ginput::find_profile(profiles, 7)->name == "Updated", "replace profile name");
 }
 
 void test_transforms() {

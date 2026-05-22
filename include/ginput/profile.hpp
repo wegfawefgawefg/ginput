@@ -52,6 +52,15 @@ bool remove_button_bind(InputProfile& profile, ButtonBind bind);
 bool remove_axis_1d_bind(InputProfile& profile, Axis1DBind bind);
 bool remove_axis_2d_bind(InputProfile& profile, Axis2DBind bind);
 
+InputProfile* find_profile(std::vector<InputProfile>& profiles, int id);
+const InputProfile* find_profile(const std::vector<InputProfile>& profiles, int id);
+InputProfile* find_profile_by_name(std::vector<InputProfile>& profiles, const std::string& name);
+const InputProfile* find_profile_by_name(const std::vector<InputProfile>& profiles,
+                                         const std::string& name);
+
+bool add_profile(std::vector<InputProfile>& profiles, InputProfile profile);
+bool replace_profile(std::vector<InputProfile>& profiles, InputProfile profile);
+
 float apply_axis_transform(float value, float scale, float deadzone);
 Vec2 apply_stick_transform(Vec2 value, float scale_x, float scale_y, float deadzone);
 
