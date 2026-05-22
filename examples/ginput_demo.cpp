@@ -27,8 +27,8 @@ int main() {
 
     std::cout << "ginput demo api version " << ginput::version_major() << "\n";
     std::cout << "profile " << profile.id << " " << profile.name << "\n";
-    std::cout << "button binds: " << profile.button_binds.size() << "\n";
-    std::cout << "2d binds: " << profile.axis_2d_binds.size() << "\n";
+    std::cout << "button binds: " << profile.button_binds().size() << "\n";
+    std::cout << "2d binds: " << profile.axis_2d_binds().size() << "\n";
     std::cout << "reconcile changes: " << report.changes.size() << "\n";
     return 0;
 }

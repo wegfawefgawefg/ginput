@@ -64,7 +64,7 @@ void parse_button_binds(gsexp::Node node, InputProfile& profile) {
         std::optional<int> device_button = bind.get_int("device_button");
         std::optional<int> action = bind.get_int("action");
         if (device_button && action) {
-            profile.button_binds.push_back(ButtonBind{*device_button, *action});
+            add_button_bind(profile, ButtonBind{*device_button, *action});
         }
     }
 }
@@ -90,7 +90,7 @@ void parse_axis_1d_binds(gsexp::Node node, InputProfile& profile) {
         if (std::optional<float> deadzone = bind.get_float("deadzone")) {
             parsed.deadzone = *deadzone;
         }
-        profile.axis_1d_binds.push_back(parsed);
+        add_axis_1d_bind(profile, parsed);
     }
 }
 
@@ -118,7 +118,7 @@ void parse_axis_2d_binds(gsexp::Node node, InputProfile& profile) {
         if (std::optional<float> deadzone = bind.get_float("deadzone")) {
             parsed.deadzone = *deadzone;
         }
-        profile.axis_2d_binds.push_back(parsed);
+        add_axis_2d_bind(profile, parsed);
     }
 }
 
@@ -150,14 +150,14 @@ void append_profile(std::ostream& out, const InputProfile& profile) {
     out << "    (name " << gsexp::quote_string(profile.name) << ")\n";
 
     out << "    (button_binds\n";
-    for (const ButtonBind& bind : profile.button_binds) {
+    for (const ButtonBind& bind : profile.button_binds()) {
         out << "      (bind (device_button " << bind.device_button << ") (action " << bind.action
             << "))\n";
     }
     out << "    )\n";
 
     out << "    (analog_1d_binds\n";
-    for (const Axis1DBind& bind : profile.axis_1d_binds) {
+    for (const Axis1DBind& bind : profile.axis_1d_binds()) {
         out << "      (bind (device_axis " << bind.device_axis << ") (axis_1d " << bind.axis_1d
             << ")";
         append_float_field(out, "scale", bind.scale, 1.0f);
@@ -167,7 +167,7 @@ void append_profile(std::ostream& out, const InputProfile& profile) {
     out << "    )\n";
 
     out << "    (analog_2d_binds\n";
-    for (const Axis2DBind& bind : profile.axis_2d_binds) {
+    for (const Axis2DBind& bind : profile.axis_2d_binds()) {
         out << "      (bind (device_stick " << bind.device_stick << ") (axis_2d " << bind.axis_2d
             << ")";
         append_float_field(out, "scale_x", bind.scale_x, 1.0f);
@@ -205,7 +205,6 @@ LoadProfilesResult load_profiles_string(std::string_view text, std::string_view 
                 Diagnostic{"skipped profile with missing id or name", 1, 1});
             continue;
         }
-        rebuild_lookup(profile);
         result.profiles.push_back(std::move(profile));
     }
 

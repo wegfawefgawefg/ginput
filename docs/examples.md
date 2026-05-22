@@ -77,9 +77,9 @@ for (const SampledAxis2D& sampled : host_sampled_axes_2d) {
 }
 ```
 
-Loaded profiles have their lookup rebuilt automatically. If caller code edits
-the public bind vectors directly, call `ginput::rebuild_lookup(profile)` after
-the edit. The add/remove helpers keep the lookup in sync.
+Loaded profiles have their lookup index ready immediately. The add/remove
+helpers keep it in sync, and bind lists are exposed as read-only views for
+debugging, saving, and editor display.
 
 Menu code reads menu action ids. Gameplay code reads gameplay action ids. There
 is no active context inside `ginput`.

@@ -28,8 +28,8 @@ ReconcileReport reconcile_profile(InputProfile& profile, const Schema& schema) {
     ReconcileReport report;
 
     std::vector<ButtonBind> valid_buttons;
-    valid_buttons.reserve(profile.button_binds.size());
-    for (const ButtonBind& bind : profile.button_binds) {
+    valid_buttons.reserve(profile.button_binds().size());
+    for (const ButtonBind& bind : profile.button_binds()) {
         if (!schema.has_action(bind.action)) {
             add_change(report, ReconcileChangeKind::RemovedMissingAction, profile.id,
                        bind.device_button, bind.action, "removed missing action bind");
@@ -49,11 +49,10 @@ ReconcileReport reconcile_profile(InputProfile& profile, const Schema& schema) {
         }
         valid_buttons.push_back(bind);
     }
-    profile.button_binds = std::move(valid_buttons);
 
     std::vector<Axis1DBind> valid_axes_1d;
-    valid_axes_1d.reserve(profile.axis_1d_binds.size());
-    for (const Axis1DBind& bind : profile.axis_1d_binds) {
+    valid_axes_1d.reserve(profile.axis_1d_binds().size());
+    for (const Axis1DBind& bind : profile.axis_1d_binds()) {
         if (!schema.has_axis_1d(bind.axis_1d)) {
             add_change(report, ReconcileChangeKind::RemovedMissingAxis1D, profile.id,
                        bind.device_axis, bind.axis_1d, "removed missing 1d axis bind");
@@ -73,11 +72,10 @@ ReconcileReport reconcile_profile(InputProfile& profile, const Schema& schema) {
         }
         valid_axes_1d.push_back(bind);
     }
-    profile.axis_1d_binds = std::move(valid_axes_1d);
 
     std::vector<Axis2DBind> valid_axes_2d;
-    valid_axes_2d.reserve(profile.axis_2d_binds.size());
-    for (const Axis2DBind& bind : profile.axis_2d_binds) {
+    valid_axes_2d.reserve(profile.axis_2d_binds().size());
+    for (const Axis2DBind& bind : profile.axis_2d_binds()) {
         if (!schema.has_axis_2d(bind.axis_2d)) {
             add_change(report, ReconcileChangeKind::RemovedMissingAxis2D, profile.id,
                        bind.device_stick, bind.axis_2d, "removed missing 2d axis bind");
@@ -97,8 +95,19 @@ ReconcileReport reconcile_profile(InputProfile& profile, const Schema& schema) {
         }
         valid_axes_2d.push_back(bind);
     }
-    profile.axis_2d_binds = std::move(valid_axes_2d);
-    rebuild_lookup(profile);
+    InputProfile reconciled;
+    reconciled.id = profile.id;
+    reconciled.name = profile.name;
+    for (const ButtonBind& bind : valid_buttons) {
+        add_button_bind(reconciled, bind);
+    }
+    for (const Axis1DBind& bind : valid_axes_1d) {
+        add_axis_1d_bind(reconciled, bind);
+    }
+    for (const Axis2DBind& bind : valid_axes_2d) {
+        add_axis_2d_bind(reconciled, bind);
+    }
+    profile = std::move(reconciled);
 
     return report;
 }

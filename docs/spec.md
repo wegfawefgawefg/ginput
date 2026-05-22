@@ -214,14 +214,24 @@ An input profile is reusable and may be shared across user profiles.
 struct InputProfile {
     int id = -1;
     std::string name;
-    std::vector<ButtonBind> button_binds;
-    std::vector<Axis1DBind> axis_1d_binds;
-    std::vector<Axis2DBind> axis_2d_binds;
+
+    const std::vector<ButtonBind>& button_binds() const;
+    const std::vector<Axis1DBind>& axis_1d_binds() const;
+    const std::vector<Axis2DBind>& axis_2d_binds() const;
 };
 ```
 
 The profile should not know which user owns it. A host game can make personal
 profiles by convention, but that is not core library policy.
+
+Profiles keep direct lookup indexes in both useful directions:
+
+- control id to action/axis binds, for runtime event application
+- action/axis id to bind records, for binding editors and settings screens
+
+Callers mutate binds through helpers such as `add_button_bind` and
+`remove_button_bind`; those helpers keep the indexes current. The bind vectors
+are read-only from the public API.
 
 Analog binds should allow small per-bind transforms with safe defaults:
 

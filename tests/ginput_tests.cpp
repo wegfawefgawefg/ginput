@@ -70,17 +70,22 @@ void test_profile_helpers() {
             "reject exact duplicate");
     require(ginput::add_button_bind(profile, ginput::ButtonBind{100, 2}),
             "allow same button to different action");
-    require(profile.button_binds.size() == 2, "button bind count");
+    require(profile.button_binds().size() == 2, "button bind count");
     require(ginput::actions_for_button(profile, 100).size() == 2, "button lookup count");
     require(ginput::actions_for_button(profile, 100)[0] == 1, "button lookup first action");
     require(ginput::actions_for_button(profile, 100)[1] == 2, "button lookup second action");
+    require(ginput::button_binds_for_action(profile, 1).size() == 1, "action lookup count");
+    require(ginput::button_binds_for_action(profile, 1)[0].device_button == 100,
+            "action lookup source");
     require(ginput::remove_button_bind(profile, ginput::ButtonBind{100, 1}), "remove bind");
-    require(profile.button_binds.size() == 1, "button bind remove count");
+    require(profile.button_binds().size() == 1, "button bind remove count");
     require(ginput::actions_for_button(profile, 100).size() == 1, "button lookup after remove");
+    require(ginput::button_binds_for_action(profile, 1).empty(), "action lookup after remove");
 
     require(ginput::add_axis_1d_bind(profile, ginput::Axis1DBind{200, 3, -1.0f, 0.05f}),
             "add 1d bind");
     require(ginput::axes_for_1d(profile, 200).size() == 1, "1d lookup count");
+    require(ginput::binds_for_axis_1d(profile, 3).size() == 1, "1d target lookup count");
     require_near(ginput::axes_for_1d(profile, 200)[0].scale, -1.0f, "1d lookup scale");
 
     std::vector<ginput::InputProfile> profiles;
@@ -116,31 +121,30 @@ void test_reconcile() {
 
     ginput::InputProfile profile;
     profile.id = 9;
-    profile.button_binds.push_back(ginput::ButtonBind{100, 1});
-    profile.button_binds.push_back(ginput::ButtonBind{100, 1});
-    profile.button_binds.push_back(ginput::ButtonBind{101, 99});
-    profile.button_binds.push_back(ginput::ButtonBind{100, 2});
-    profile.axis_1d_binds.push_back(ginput::Axis1DBind{200, 3});
-    profile.axis_1d_binds.push_back(ginput::Axis1DBind{201, 99});
-    profile.axis_2d_binds.push_back(ginput::Axis2DBind{300, 4});
-    profile.axis_2d_binds.push_back(ginput::Axis2DBind{300, 4});
+    ginput::add_button_bind(profile, ginput::ButtonBind{100, 1});
+    ginput::add_button_bind(profile, ginput::ButtonBind{101, 99});
+    ginput::add_button_bind(profile, ginput::ButtonBind{100, 2});
+    ginput::add_axis_1d_bind(profile, ginput::Axis1DBind{200, 3});
+    ginput::add_axis_1d_bind(profile, ginput::Axis1DBind{201, 99});
+    ginput::add_axis_2d_bind(profile, ginput::Axis2DBind{300, 4});
 
     const ginput::ReconcileReport report = ginput::reconcile_profile(profile, schema);
     require(report.changed(), "reconcile changed");
-    require(report.changes.size() == 4, "reconcile change count");
-    require(profile.button_binds.size() == 2, "reconcile keeps valid distinct buttons");
-    require(profile.axis_1d_binds.size() == 1, "reconcile removes invalid 1d axis");
-    require(profile.axis_2d_binds.size() == 1, "reconcile removes duplicate 2d axis");
+    require(report.changes.size() == 2, "reconcile change count");
+    require(profile.button_binds().size() == 2, "reconcile keeps valid distinct buttons");
+    require(profile.axis_1d_binds().size() == 1, "reconcile removes invalid 1d axis");
+    require(profile.axis_2d_binds().size() == 1, "reconcile keeps valid 2d axis");
+    require(ginput::actions_for_button(profile, 101).empty(), "reconcile updates button lookup");
 }
 
 void test_profile_io() {
     ginput::InputProfile profile;
     profile.id = 12;
     profile.name = "Keyboard";
-    profile.button_binds.push_back(ginput::ButtonBind{26, 0});
-    profile.button_binds.push_back(ginput::ButtonBind{26, 1});
-    profile.axis_1d_binds.push_back(ginput::Axis1DBind{1000, 2, -1.0f, 0.05f});
-    profile.axis_2d_binds.push_back(ginput::Axis2DBind{2000, 3, 1.0f, -1.0f, 0.12f});
+    ginput::add_button_bind(profile, ginput::ButtonBind{26, 0});
+    ginput::add_button_bind(profile, ginput::ButtonBind{26, 1});
+    ginput::add_axis_1d_bind(profile, ginput::Axis1DBind{1000, 2, -1.0f, 0.05f});
+    ginput::add_axis_2d_bind(profile, ginput::Axis2DBind{2000, 3, 1.0f, -1.0f, 0.12f});
 
     std::string text;
     require(ginput::save_profiles_string({profile}, text), "save profiles string");
@@ -152,15 +156,15 @@ void test_profile_io() {
     require(loaded.ok, "load saved profiles");
     require(loaded.profiles.size() == 1, "load profile count");
     require(loaded.profiles[0].name == "Keyboard", "load profile name");
-    require(loaded.profiles[0].button_binds.size() == 2, "load button bind count");
+    require(loaded.profiles[0].button_binds().size() == 2, "load button bind count");
     require(ginput::actions_for_button(loaded.profiles[0], 26).size() == 2,
             "load rebuilds button lookup");
-    require(loaded.profiles[0].axis_1d_binds.size() == 1, "load 1d bind count");
+    require(loaded.profiles[0].axis_1d_binds().size() == 1, "load 1d bind count");
     require(ginput::axes_for_1d(loaded.profiles[0], 1000).size() == 1, "load rebuilds 1d lookup");
-    require(loaded.profiles[0].axis_2d_binds.size() == 1, "load 2d bind count");
+    require(loaded.profiles[0].axis_2d_binds().size() == 1, "load 2d bind count");
     require(ginput::axes_for_2d(loaded.profiles[0], 2000).size() == 1, "load rebuilds 2d lookup");
-    require_near(loaded.profiles[0].axis_1d_binds[0].scale, -1.0f, "load 1d scale");
-    require_near(loaded.profiles[0].axis_2d_binds[0].scale_y, -1.0f, "load 2d scale");
+    require_near(loaded.profiles[0].axis_1d_binds()[0].scale, -1.0f, "load 1d scale");
+    require_near(loaded.profiles[0].axis_2d_binds()[0].scale_y, -1.0f, "load 2d scale");
 
     ginput::Schema schema;
     schema.add_action(0, "Menu Up");

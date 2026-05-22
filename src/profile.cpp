@@ -18,6 +18,40 @@ template <typename T> const std::vector<T>& empty_vector() {
 
 } // namespace
 
+const std::vector<ButtonBind>& InputProfile::button_binds() const {
+    return button_bind_records;
+}
+
+const std::vector<Axis1DBind>& InputProfile::axis_1d_binds() const {
+    return axis_1d_bind_records;
+}
+
+const std::vector<Axis2DBind>& InputProfile::axis_2d_binds() const {
+    return axis_2d_bind_records;
+}
+
+void InputProfile::rebuild_lookup() {
+    lookup_index.button_actions.clear();
+    lookup_index.axes_1d.clear();
+    lookup_index.axes_2d.clear();
+    lookup_index.action_button_binds.clear();
+    lookup_index.axis_1d_binds.clear();
+    lookup_index.axis_2d_binds.clear();
+
+    for (const ButtonBind& bind : button_bind_records) {
+        lookup_index.button_actions[bind.device_button].push_back(bind.action);
+        lookup_index.action_button_binds[bind.action].push_back(bind);
+    }
+    for (const Axis1DBind& bind : axis_1d_bind_records) {
+        lookup_index.axes_1d[bind.device_axis].push_back(bind);
+        lookup_index.axis_1d_binds[bind.axis_1d].push_back(bind);
+    }
+    for (const Axis2DBind& bind : axis_2d_bind_records) {
+        lookup_index.axes_2d[bind.device_stick].push_back(bind);
+        lookup_index.axis_2d_binds[bind.axis_2d].push_back(bind);
+    }
+}
+
 bool same_bind(const ButtonBind& a, const ButtonBind& b) {
     return a.device_button == b.device_button && a.action == b.action;
 }
@@ -34,68 +68,71 @@ bool same_bind(const Axis2DBind& a, const Axis2DBind& b) {
 }
 
 bool add_button_bind(InputProfile& profile, ButtonBind bind) {
-    for (const ButtonBind& existing : profile.button_binds) {
+    for (const ButtonBind& existing : profile.button_bind_records) {
         if (same_bind(existing, bind)) {
             return false;
         }
     }
-    profile.button_binds.push_back(bind);
-    profile.lookup.button_actions[bind.device_button].push_back(bind.action);
+    profile.button_bind_records.push_back(bind);
+    profile.lookup_index.button_actions[bind.device_button].push_back(bind.action);
+    profile.lookup_index.action_button_binds[bind.action].push_back(bind);
     return true;
 }
 
 bool add_axis_1d_bind(InputProfile& profile, Axis1DBind bind) {
-    for (const Axis1DBind& existing : profile.axis_1d_binds) {
+    for (const Axis1DBind& existing : profile.axis_1d_bind_records) {
         if (same_bind(existing, bind)) {
             return false;
         }
     }
-    profile.axis_1d_binds.push_back(bind);
-    profile.lookup.axes_1d[bind.device_axis].push_back(bind);
+    profile.axis_1d_bind_records.push_back(bind);
+    profile.lookup_index.axes_1d[bind.device_axis].push_back(bind);
+    profile.lookup_index.axis_1d_binds[bind.axis_1d].push_back(bind);
     return true;
 }
 
 bool add_axis_2d_bind(InputProfile& profile, Axis2DBind bind) {
-    for (const Axis2DBind& existing : profile.axis_2d_binds) {
+    for (const Axis2DBind& existing : profile.axis_2d_bind_records) {
         if (same_bind(existing, bind)) {
             return false;
         }
     }
-    profile.axis_2d_binds.push_back(bind);
-    profile.lookup.axes_2d[bind.device_stick].push_back(bind);
+    profile.axis_2d_bind_records.push_back(bind);
+    profile.lookup_index.axes_2d[bind.device_stick].push_back(bind);
+    profile.lookup_index.axis_2d_binds[bind.axis_2d].push_back(bind);
     return true;
 }
 
 bool remove_button_bind(InputProfile& profile, ButtonBind bind) {
-    auto it = std::find_if(profile.button_binds.begin(), profile.button_binds.end(),
+    auto it = std::find_if(profile.button_bind_records.begin(), profile.button_bind_records.end(),
                            [&](const ButtonBind& existing) { return same_bind(existing, bind); });
-    if (it == profile.button_binds.end()) {
+    if (it == profile.button_bind_records.end()) {
         return false;
     }
-    profile.button_binds.erase(it);
-    rebuild_lookup(profile);
+    profile.button_bind_records.erase(it);
+    profile.rebuild_lookup();
     return true;
 }
 
 bool remove_axis_1d_bind(InputProfile& profile, Axis1DBind bind) {
-    auto it = std::find_if(profile.axis_1d_binds.begin(), profile.axis_1d_binds.end(),
+    auto it = std::find_if(profile.axis_1d_bind_records.begin(), profile.axis_1d_bind_records.end(),
                            [&](const Axis1DBind& existing) { return same_bind(existing, bind); });
-    if (it == profile.axis_1d_binds.end()) {
+    if (it == profile.axis_1d_bind_records.end()) {
         return false;
     }
-    profile.axis_1d_binds.erase(it);
-    rebuild_lookup(profile);
+    profile.axis_1d_bind_records.erase(it);
+    profile.rebuild_lookup();
     return true;
 }
 
 bool remove_axis_2d_bind(InputProfile& profile, Axis2DBind bind) {
-    auto it = std::find_if(profile.axis_2d_binds.begin(), profile.axis_2d_binds.end(),
+    auto it = std::find_if(profile.axis_2d_bind_records.begin(), profile.axis_2d_bind_records.end(),
                            [&](const Axis2DBind& existing) { return same_bind(existing, bind); });
-    if (it == profile.axis_2d_binds.end()) {
+    if (it == profile.axis_2d_bind_records.end()) {
         return false;
     }
-    profile.axis_2d_binds.erase(it);
-    rebuild_lookup(profile);
+    profile.axis_2d_bind_records.erase(it);
+    profile.rebuild_lookup();
     return true;
 }
 
@@ -146,7 +183,7 @@ bool add_profile(std::vector<InputProfile>& profiles, InputProfile profile) {
     if (find_profile_by_name(profiles, profile.name) != nullptr) {
         return false;
     }
-    rebuild_lookup(profile);
+    profile.rebuild_lookup();
     profiles.push_back(std::move(profile));
     return true;
 }
@@ -162,36 +199,20 @@ bool replace_profile(std::vector<InputProfile>& profiles, InputProfile profile) 
     }
     for (InputProfile& existing : profiles) {
         if (existing.id == profile.id) {
-            rebuild_lookup(profile);
+            profile.rebuild_lookup();
             existing = std::move(profile);
             return true;
         }
     }
-    rebuild_lookup(profile);
+    profile.rebuild_lookup();
     profiles.push_back(std::move(profile));
     return true;
 }
 
-void rebuild_lookup(InputProfile& profile) {
-    profile.lookup.button_actions.clear();
-    profile.lookup.axes_1d.clear();
-    profile.lookup.axes_2d.clear();
-
-    for (const ButtonBind& bind : profile.button_binds) {
-        profile.lookup.button_actions[bind.device_button].push_back(bind.action);
-    }
-    for (const Axis1DBind& bind : profile.axis_1d_binds) {
-        profile.lookup.axes_1d[bind.device_axis].push_back(bind);
-    }
-    for (const Axis2DBind& bind : profile.axis_2d_binds) {
-        profile.lookup.axes_2d[bind.device_stick].push_back(bind);
-    }
-}
-
 const std::vector<ActionId>& actions_for_button(const InputProfile& profile,
                                                 EncodedControl device_button) {
-    auto it = profile.lookup.button_actions.find(device_button);
-    if (it == profile.lookup.button_actions.end()) {
+    auto it = profile.lookup_index.button_actions.find(device_button);
+    if (it == profile.lookup_index.button_actions.end()) {
         return empty_vector<ActionId>();
     }
     return it->second;
@@ -199,8 +220,8 @@ const std::vector<ActionId>& actions_for_button(const InputProfile& profile,
 
 const std::vector<Axis1DBind>& axes_for_1d(const InputProfile& profile,
                                            EncodedControl device_axis) {
-    auto it = profile.lookup.axes_1d.find(device_axis);
-    if (it == profile.lookup.axes_1d.end()) {
+    auto it = profile.lookup_index.axes_1d.find(device_axis);
+    if (it == profile.lookup_index.axes_1d.end()) {
         return empty_vector<Axis1DBind>();
     }
     return it->second;
@@ -208,8 +229,33 @@ const std::vector<Axis1DBind>& axes_for_1d(const InputProfile& profile,
 
 const std::vector<Axis2DBind>& axes_for_2d(const InputProfile& profile,
                                            EncodedControl device_stick) {
-    auto it = profile.lookup.axes_2d.find(device_stick);
-    if (it == profile.lookup.axes_2d.end()) {
+    auto it = profile.lookup_index.axes_2d.find(device_stick);
+    if (it == profile.lookup_index.axes_2d.end()) {
+        return empty_vector<Axis2DBind>();
+    }
+    return it->second;
+}
+
+const std::vector<ButtonBind>& button_binds_for_action(const InputProfile& profile,
+                                                       ActionId action) {
+    auto it = profile.lookup_index.action_button_binds.find(action);
+    if (it == profile.lookup_index.action_button_binds.end()) {
+        return empty_vector<ButtonBind>();
+    }
+    return it->second;
+}
+
+const std::vector<Axis1DBind>& binds_for_axis_1d(const InputProfile& profile, Axis1DId axis_1d) {
+    auto it = profile.lookup_index.axis_1d_binds.find(axis_1d);
+    if (it == profile.lookup_index.axis_1d_binds.end()) {
+        return empty_vector<Axis1DBind>();
+    }
+    return it->second;
+}
+
+const std::vector<Axis2DBind>& binds_for_axis_2d(const InputProfile& profile, Axis2DId axis_2d) {
+    auto it = profile.lookup_index.axis_2d_binds.find(axis_2d);
+    if (it == profile.lookup_index.axis_2d_binds.end()) {
         return empty_vector<Axis2DBind>();
     }
     return it->second;
