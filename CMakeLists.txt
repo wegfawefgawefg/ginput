@@ -32,6 +32,9 @@ add_library(ginput
 
 add_library(ginput::ginput ALIAS ginput)
 
+add_library(ginput_runtime INTERFACE)
+add_library(ginput::runtime ALIAS ginput_runtime)
+
 target_include_directories(ginput
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -40,6 +43,8 @@ target_include_directories(ginput
 
 target_compile_features(ginput PUBLIC cxx_std_20)
 target_link_libraries(ginput PUBLIC gsexp::gsexp)
+
+target_link_libraries(ginput_runtime INTERFACE ginput::ginput)
 
 function(ginput_apply_warnings target_name)
     if(NOT GINPUT_STRICT)

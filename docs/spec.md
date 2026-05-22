@@ -47,10 +47,22 @@ The core library owns:
 - Reconciliation against a schema.
 - Duplicate checks.
 - Load/save for profiles.
-- Stateless button edge helpers.
 
 The core should be deterministic, inspectable, and easy to debug. It should use
 plain structs and vectors unless a measured need appears.
+
+## Runtime Responsibilities
+
+The optional backend-neutral runtime layer may own:
+
+- `FrameState` for current/previous action and axis snapshots.
+- Button edge helpers.
+- Menu repeat/debounce helpers.
+- Mouse wheel accumulation.
+- Axis merge helpers.
+
+Runtime helpers must be explicit-state. They should not use globals, poll
+devices, or know about SDL/raylib.
 
 ## Non-Responsibilities
 
@@ -63,7 +75,6 @@ The core library must not own:
 - Player profiles or user profiles.
 - Save files.
 - Game simulation input consumption.
-- Current/previous frame storage.
 - Deciding which action ids are relevant in a game mode.
 - Menu screens or binding editor UI.
 - Rendering overlays.
@@ -73,17 +84,24 @@ The core library must not own:
 
 Those concerns belong in adapters, examples, or the host game.
 
-## Button Edges
+## Runtime Helpers
 
-`ginput` may provide tiny stateless helpers for edge math:
+`ginput::runtime` provides small backend-neutral helpers for common input-frame
+bookkeeping:
 
 ```cpp
-ginput::ButtonState jump =
-    ginput::make_button_state(current_jump_down, previous_jump_down);
+ginput::FrameState frame;
+frame.resize_actions(schema.actions().size());
+frame.begin_frame();
+frame.set_down(Jump, true);
+
+if (frame.pressed(Jump)) {
+    jump();
+}
 ```
 
-This is not a runtime input system. The host still owns current/previous
-snapshots, frame timing, fixed-tick timing, repeat/debounce, and text input.
+The host still owns frame timing, fixed-tick timing, device polling, backend
+events, and text input.
 
 ## Relationship To gconfig
 
@@ -368,13 +386,13 @@ An adapter can own:
 
 - backend key/button enum translation
 - device enumeration
-- sampling a backend state snapshot
-- deadzone helpers
+- backend control labels
 
 An adapter should not own:
 
 - user profiles
 - binding editor UI
+- device polling
 - ImGui capture policy
 - game action dispatch
 - app event loop

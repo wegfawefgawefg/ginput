@@ -134,6 +134,67 @@ void test_transforms() {
     require_near(stick.y, -0.5f, "stick y scale");
 }
 
+void test_runtime_helpers() {
+    ginput::FrameState frame;
+    frame.resize_actions(4);
+    frame.resize_axes_1d(2);
+    frame.resize_axes_2d(1);
+
+    frame.begin_frame();
+    frame.set_down(1, true);
+    frame.set_axis_1d(0, 0.25f);
+    frame.set_axis_2d(0, ginput::Vec2{0.5f, -0.25f});
+    require(frame.down(1), "frame down");
+    require(frame.pressed(1), "frame pressed");
+    require(!frame.released(1), "frame released false");
+    require_near(frame.axis_1d(0), 0.25f, "frame axis 1d");
+    require_near(frame.axis_2d(0).x, 0.5f, "frame axis 2d x");
+    require_near(frame.axis_2d(0).y, -0.25f, "frame axis 2d y");
+
+    frame.begin_frame();
+    require(!frame.down(1), "frame clears current");
+    require(frame.released(1), "frame released");
+    require_near(frame.axis_1d_delta(0), -0.25f, "frame axis 1d delta");
+
+    frame.begin_frame(ginput::FrameReset::KeepCurrent);
+    frame.set_down(2, true);
+    frame.begin_frame(ginput::FrameReset::KeepCurrent);
+    require(frame.down(2), "frame keep current");
+    require(!frame.pressed(2), "frame kept held");
+
+    frame.merge_axis_1d(0, 0.2f);
+    frame.merge_axis_1d(0, -0.7f);
+    require_near(frame.axis_1d(0), -0.7f, "frame merge 1d larger magnitude");
+    frame.merge_axis_2d(0, ginput::Vec2{0.1f, 0.1f});
+    frame.merge_axis_2d(0, ginput::Vec2{0.9f, 0.0f});
+    require_near(frame.axis_2d(0).x, 0.9f, "frame merge 2d larger magnitude");
+
+    ginput::RepeatState repeat;
+    ginput::RepeatConfig config{0.3f, 0.1f};
+    ginput::RepeatResult first = ginput::update_repeat(true, repeat, 0.0f, config);
+    require(first.trigger && first.first_press && !first.repeat, "repeat first press");
+    ginput::RepeatResult waiting = ginput::update_repeat(true, repeat, 0.1f, config);
+    require(!waiting.trigger, "repeat waiting");
+    ginput::RepeatResult repeated = ginput::update_repeat(true, repeat, 0.21f, config);
+    require(repeated.trigger && repeated.repeat, "repeat trigger");
+    ginput::RepeatResult released = ginput::update_repeat(false, repeat, 0.0f, config);
+    require(!released.trigger, "repeat release");
+    ginput::RepeatResult first_again = ginput::update_repeat(true, repeat, 0.0f, config);
+    require(first_again.first_press, "repeat resets");
+
+    ginput::MouseWheelAccumulator wheel;
+    wheel.add(1.0f);
+    wheel.add(-0.25f);
+    require_near(wheel.value(), 0.75f, "wheel value");
+    require_near(wheel.consume(), 0.75f, "wheel consume");
+    require_near(wheel.value(), 0.0f, "wheel consumed reset");
+
+    require_near(ginput::choose_larger_magnitude(0.2f, -0.5f), -0.5f, "choose 1d");
+    const ginput::Vec2 chosen =
+        ginput::choose_larger_magnitude(ginput::Vec2{0.2f, 0.2f}, ginput::Vec2{0.7f, 0.0f});
+    require_near(chosen.x, 0.7f, "choose 2d x");
+}
+
 void test_reconcile() {
     ginput::Schema schema;
     schema.add_action(1, "Use");
@@ -207,6 +268,7 @@ int main() {
     test_button_state();
     test_profile_helpers();
     test_transforms();
+    test_runtime_helpers();
     test_reconcile();
     test_profile_io();
     std::cout << "ginput_tests passed\n";

@@ -20,10 +20,19 @@ data. A game can use `gconfig` to store which input profile a user selected.
 - Action schemas for button actions, 1D axes, and 2D axes/sticks.
 - Named/id input profiles.
 - Integer-id bindings from device controls to game actions.
-- Tiny button edge helper for current/previous snapshots.
 - Reconciliation against schemas.
 - Duplicate checks.
 - S-expression load/save through `gsexp`.
+
+## Runtime Helpers
+
+- `FrameState` for current/previous action and axis snapshots.
+- `ButtonState` and edge queries: down, pressed, released.
+- Repeat/debounce helper for menu navigation.
+- Mouse wheel accumulator.
+- Axis merge helpers.
+
+These helpers do not poll devices or own an event loop.
 
 ## Add To A Project
 
@@ -46,6 +55,13 @@ set(GINPUT_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 add_subdirectory(third_party/ginput)
 
 target_link_libraries(my_game PRIVATE ginput::ginput)
+```
+
+`ginput::runtime` is an interface target for the backend-neutral runtime
+headers. It links `ginput::ginput`, so consumers may use either target:
+
+```cmake
+target_link_libraries(my_game PRIVATE ginput::runtime)
 ```
 
 For sibling development checkouts, `ginput` defaults `GINPUT_GSEXP_SOURCE_DIR`
@@ -82,12 +98,19 @@ const std::vector<ginput::ActionId>& actions = ginput::actions_for_button(
     loaded.profiles[0],
     26);
 
-ginput::ButtonState jump = ginput::make_button_state(current_jump_down, previous_jump_down);
+ginput::FrameState frame;
+frame.resize_actions(schema.actions().size());
+frame.begin_frame();
+frame.set_down(MoveUp, true);
+
+if (frame.pressed(MoveUp)) {
+    // First frame MoveUp is down.
+}
 ```
 
 The host game still owns device polling and action consumption. `ginput` stores
-the profile, validates it against the schema, and keeps direct lookup tables on
-loaded profiles.
+the profile, validates it against the schema, keeps direct lookup tables on
+loaded profiles, and offers small backend-neutral runtime helpers.
 
 ## Optional Adapters
 
@@ -95,7 +118,7 @@ loaded profiles.
 - Raylib adapter if a real consumer needs it.
 
 Adapters should translate backend input into `ginput` device/control ids. The
-core should not include SDL, raylib, ImGui, GLM, or engine state.
+core/runtime should not include SDL, raylib, ImGui, GLM, or engine state.
 
 See [docs/spec.md](docs/spec.md) for scope and design boundaries.
 See [docs/examples.md](docs/examples.md) for profile and consumption examples.

@@ -53,18 +53,22 @@ mean. Profiles keep a direct lookup index, so this path does not need to scan
 every bind:
 
 ```cpp
-InputFrame frame{};
+ginput::FrameState frame;
+frame.resize_actions(schema.actions().size());
+frame.resize_axes_1d(schema.axes_1d().size());
+frame.resize_axes_2d(schema.axes_2d().size());
+frame.begin_frame();
 
 for (ginput::EncodedControl pressed : host_pressed_buttons_this_frame) {
     for (ginput::ActionId action : ginput::actions_for_button(profile, pressed)) {
-        frame.down_actions.set(action);
+        frame.set_down(action, true);
     }
 }
 
 for (const SampledAxis1D& sampled : host_sampled_axes_1d) {
     for (const ginput::Axis1DBind& bind : ginput::axes_for_1d(profile, sampled.control)) {
         float value = ginput::apply_axis_transform(sampled.value, bind.scale, bind.deadzone);
-        frame.axis_1d[bind.axis_1d] = choose_larger_magnitude(frame.axis_1d[bind.axis_1d], value);
+        frame.merge_axis_1d(bind.axis_1d, value);
     }
 }
 
@@ -72,7 +76,7 @@ for (const SampledAxis2D& sampled : host_sampled_axes_2d) {
     for (const ginput::Axis2DBind& bind : ginput::axes_for_2d(profile, sampled.control)) {
         ginput::Vec2 value =
             ginput::apply_stick_transform(sampled.value, bind.scale_x, bind.scale_y, bind.deadzone);
-        frame.axis_2d[bind.axis_2d] = choose_larger_magnitude(frame.axis_2d[bind.axis_2d], value);
+        frame.merge_axis_2d(bind.axis_2d, value);
     }
 }
 ```
@@ -84,19 +88,17 @@ debugging, saving, and editor display.
 Menu code reads menu action ids. Gameplay code reads gameplay action ids. There
 is no active context inside `ginput`.
 
-If a game stores current and previous action snapshots, the edge helper is just:
+`FrameState` keeps previous values when `begin_frame` is called, so edge queries
+are direct:
 
 ```cpp
-ginput::ButtonState use =
-    ginput::make_button_state(current.is_down(Use), previous.is_down(Use));
-
-if (use.pressed) {
+if (frame.pressed(Use)) {
     activate_item();
 }
 ```
 
-`ginput` does not store those snapshots. The host game owns frame timing and
-history.
+The host game still owns when frames begin and whether input is latched per
+render frame or fixed tick.
 
 ## Gubsy-Style Menu And Gameplay
 
