@@ -6,8 +6,24 @@ option(GINPUT_STRICT "Enable strict compiler warnings" ON)
 option(GINPUT_WARN_AS_ERROR "Treat warnings as errors" OFF)
 option(GINPUT_BUILD_EXAMPLES "Build example programs" ON)
 option(GINPUT_BUILD_TESTS "Build test programs" ON)
+set(GINPUT_GSEXP_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../gsexp"
+    CACHE PATH "Path to a gsexp source tree when gsexp::gsexp is not already available")
+
+if(NOT TARGET gsexp::gsexp)
+    if(EXISTS "${GINPUT_GSEXP_SOURCE_DIR}/CMakeLists.txt")
+        set(GSEXP_BUILD_EXAMPLES OFF CACHE BOOL "Build gsexp examples" FORCE)
+        set(GSEXP_BUILD_TESTS OFF CACHE BOOL "Build gsexp tests" FORCE)
+        set(GSEXP_BUILD_BENCHMARKS OFF CACHE BOOL "Build gsexp benchmarks" FORCE)
+        add_subdirectory("${GINPUT_GSEXP_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/_deps/gsexp")
+    else()
+        message(FATAL_ERROR
+            "gsexp::gsexp target was not found and GINPUT_GSEXP_SOURCE_DIR does not point "
+            "to a gsexp source tree: ${GINPUT_GSEXP_SOURCE_DIR}")
+    endif()
+endif()
 
 add_library(ginput
+    src/io.cpp
     src/profile.cpp
     src/reconcile.cpp
     src/schema.cpp
@@ -23,6 +39,7 @@ target_include_directories(ginput
 )
 
 target_compile_features(ginput PUBLIC cxx_std_20)
+target_link_libraries(ginput PUBLIC gsexp::gsexp)
 
 function(ginput_apply_warnings target_name)
     if(NOT GINPUT_STRICT)

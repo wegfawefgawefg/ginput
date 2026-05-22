@@ -3,6 +3,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
+#include <string>
 
 namespace {
 
@@ -110,6 +111,41 @@ void test_reconcile() {
     require(profile.axis_2d_binds.size() == 1, "reconcile removes duplicate 2d axis");
 }
 
+void test_profile_io() {
+    ginput::InputProfile profile;
+    profile.id = 12;
+    profile.name = "Keyboard";
+    profile.button_binds.push_back(ginput::ButtonBind{26, 0});
+    profile.button_binds.push_back(ginput::ButtonBind{26, 1});
+    profile.axis_1d_binds.push_back(ginput::Axis1DBind{1000, 2, -1.0f, 0.05f});
+    profile.axis_2d_binds.push_back(ginput::Axis2DBind{2000, 3, 1.0f, -1.0f, 0.12f});
+
+    std::string text;
+    require(ginput::save_profiles_string({profile}, text), "save profiles string");
+    require(text.find("(input_profiles") != std::string::npos, "save root");
+    require(text.find("(scale -1") != std::string::npos, "save 1d scale");
+    require(text.find("(scale_y -1") != std::string::npos, "save 2d scale");
+
+    ginput::LoadProfilesResult loaded = ginput::load_profiles_string(text);
+    require(loaded.ok, "load saved profiles");
+    require(loaded.profiles.size() == 1, "load profile count");
+    require(loaded.profiles[0].name == "Keyboard", "load profile name");
+    require(loaded.profiles[0].button_binds.size() == 2, "load button bind count");
+    require(loaded.profiles[0].axis_1d_binds.size() == 1, "load 1d bind count");
+    require(loaded.profiles[0].axis_2d_binds.size() == 1, "load 2d bind count");
+    require_near(loaded.profiles[0].axis_1d_binds[0].scale, -1.0f, "load 1d scale");
+    require_near(loaded.profiles[0].axis_2d_binds[0].scale_y, -1.0f, "load 2d scale");
+
+    ginput::Schema schema;
+    schema.add_action(0, "Menu Up");
+    schema.add_action(1, "Move Up");
+    schema.add_axis_1d(2, "Throttle");
+    schema.add_axis_2d(3, "Aim");
+    ginput::LoadProfilesResult reconciled = ginput::load_profiles_string(text, schema);
+    require(reconciled.ok, "load with schema");
+    require(!reconciled.reconcile_report.changed(), "load with schema no changes");
+}
+
 } // namespace
 
 int main() {
@@ -119,6 +155,7 @@ int main() {
     test_profile_helpers();
     test_transforms();
     test_reconcile();
+    test_profile_io();
     std::cout << "ginput_tests passed\n";
     return 0;
 }

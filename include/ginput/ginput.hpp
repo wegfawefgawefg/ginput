@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ginput/io.hpp"
 #include "ginput/profile.hpp"
 #include "ginput/reconcile.hpp"
 #include "ginput/schema.hpp"
