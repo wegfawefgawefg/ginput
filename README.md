@@ -1,0 +1,36 @@
+# ginput
+
+<p>
+  <img src="assets/logo.svg" alt="ginput logo" width="96" height="96">
+</p>
+
+`ginput` is planned as a small C++20 library for input action schemas, input
+profiles, and integer-id input bindings.
+
+It is intended to extract the reusable binding/profile parts of Gubsy's input
+system without taking ownership of a game's event loop, player model, renderer,
+or UI.
+
+`ginput` saves input profile files: named collections of button, 1D axis, and
+2D axis bindings. It does not save user profiles, global settings, or save-game
+data. A game can use `gconfig` to store which input profile a user selected.
+
+## Intended Core
+
+- Action schemas for button actions, 1D axes, and 2D axes/sticks.
+- Named/id input profiles.
+- Integer-id bindings from device controls to game actions.
+- Reconciliation against schemas.
+- Duplicate checks.
+- S-expression load/save through `gsexp`.
+
+## Intended Optional Adapters
+
+- SDL3 adapter for translating SDL keyboard, mouse, and gamepad inputs.
+- Raylib adapter if a real consumer needs it.
+
+Adapters should translate backend input into `ginput` device/control ids. The
+core should not include SDL, raylib, ImGui, GLM, or engine state.
+
+See [docs/spec.md](docs/spec.md) for scope and design boundaries.
+See [docs/examples.md](docs/examples.md) for profile and consumption examples.
