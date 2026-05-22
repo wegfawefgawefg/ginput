@@ -8,7 +8,10 @@ option(GINPUT_BUILD_EXAMPLES "Build example programs" ON)
 option(GINPUT_BUILD_TESTS "Build test programs" ON)
 
 add_library(ginput
-    src/ginput.cpp
+    src/profile.cpp
+    src/reconcile.cpp
+    src/schema.cpp
+    src/types.cpp
 )
 
 add_library(ginput::ginput ALIAS ginput)
@@ -64,4 +67,3 @@ if(GINPUT_BUILD_TESTS)
 
     add_test(NAME ginput_tests COMMAND ginput_tests)
 endif()
-
