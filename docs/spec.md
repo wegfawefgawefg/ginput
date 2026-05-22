@@ -47,6 +47,7 @@ The core library owns:
 - Reconciliation against a schema.
 - Duplicate checks.
 - Load/save for profiles.
+- Stateless button edge helpers.
 
 The core should be deterministic, inspectable, and easy to debug. It should use
 plain structs and vectors unless a measured need appears.
@@ -62,6 +63,7 @@ The core library must not own:
 - Player profiles or user profiles.
 - Save files.
 - Game simulation input consumption.
+- Current/previous frame storage.
 - Deciding which action ids are relevant in a game mode.
 - Menu screens or binding editor UI.
 - Rendering overlays.
@@ -70,6 +72,18 @@ The core library must not own:
 - Cloud sync, Steam Input, or platform account policy.
 
 Those concerns belong in adapters, examples, or the host game.
+
+## Button Edges
+
+`ginput` may provide tiny stateless helpers for edge math:
+
+```cpp
+ginput::ButtonState jump =
+    ginput::make_button_state(current_jump_down, previous_jump_down);
+```
+
+This is not a runtime input system. The host still owns current/previous
+snapshots, frame timing, fixed-tick timing, repeat/debounce, and text input.
 
 ## Relationship To gconfig
 

@@ -60,6 +60,28 @@ void test_schema() {
     require(schema.find_action(0)->label == "Jump", "find action label");
 }
 
+void test_button_state() {
+    ginput::ButtonState idle = ginput::make_button_state(false, false);
+    require(!idle.down, "idle down");
+    require(!idle.pressed, "idle pressed");
+    require(!idle.released, "idle released");
+
+    ginput::ButtonState pressed = ginput::make_button_state(true, false);
+    require(pressed.down, "pressed down");
+    require(pressed.pressed, "pressed edge");
+    require(!pressed.released, "pressed released");
+
+    ginput::ButtonState held = ginput::make_button_state(true, true);
+    require(held.down, "held down");
+    require(!held.pressed, "held pressed");
+    require(!held.released, "held released");
+
+    ginput::ButtonState released = ginput::make_button_state(false, true);
+    require(!released.down, "released down");
+    require(!released.pressed, "released pressed");
+    require(released.released, "released edge");
+}
+
 void test_profile_helpers() {
     ginput::InputProfile profile;
     profile.id = 7;
@@ -182,6 +204,7 @@ int main() {
     require(ginput::version_major() == 0, "version placeholder");
     test_encoded_controls();
     test_schema();
+    test_button_state();
     test_profile_helpers();
     test_transforms();
     test_reconcile();

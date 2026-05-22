@@ -84,6 +84,20 @@ debugging, saving, and editor display.
 Menu code reads menu action ids. Gameplay code reads gameplay action ids. There
 is no active context inside `ginput`.
 
+If a game stores current and previous action snapshots, the edge helper is just:
+
+```cpp
+ginput::ButtonState use =
+    ginput::make_button_state(current.is_down(Use), previous.is_down(Use));
+
+if (use.pressed) {
+    activate_item();
+}
+```
+
+`ginput` does not store those snapshots. The host game owns frame timing and
+history.
+
 ## Gubsy-Style Menu And Gameplay
 
 This mirrors Gubsy's current model: the same physical key can bind to menu and

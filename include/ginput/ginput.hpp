@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ginput/button_state.hpp"
 #include "ginput/io.hpp"
 #include "ginput/profile.hpp"
 #include "ginput/reconcile.hpp"

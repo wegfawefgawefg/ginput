@@ -20,6 +20,7 @@ data. A game can use `gconfig` to store which input profile a user selected.
 - Action schemas for button actions, 1D axes, and 2D axes/sticks.
 - Named/id input profiles.
 - Integer-id bindings from device controls to game actions.
+- Tiny button edge helper for current/previous snapshots.
 - Reconciliation against schemas.
 - Duplicate checks.
 - S-expression load/save through `gsexp`.
@@ -80,6 +81,8 @@ ginput::LoadProfilesResult loaded = ginput::load_profiles_string(text, schema);
 const std::vector<ginput::ActionId>& actions = ginput::actions_for_button(
     loaded.profiles[0],
     26);
+
+ginput::ButtonState jump = ginput::make_button_state(current_jump_down, previous_jump_down);
 ```
 
 The host game still owns device polling and action consumption. `ginput` stores
