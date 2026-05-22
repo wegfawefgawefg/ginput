@@ -12,14 +12,10 @@ std::string message_for(const char* reason, int source_id, int target_id) {
     return out.str();
 }
 
-void add_change(ReconcileReport& report,
-                ReconcileChangeKind kind,
-                int profile_id,
-                int source_id,
-                int target_id,
-                const char* reason) {
-    report.changes.push_back(
-        ReconcileChange{kind, profile_id, source_id, target_id, message_for(reason, source_id, target_id)});
+void add_change(ReconcileReport& report, ReconcileChangeKind kind, int profile_id, int source_id,
+                int target_id, const char* reason) {
+    report.changes.push_back(ReconcileChange{kind, profile_id, source_id, target_id,
+                                             message_for(reason, source_id, target_id)});
 }
 
 } // namespace
@@ -35,12 +31,8 @@ ReconcileReport reconcile_profile(InputProfile& profile, const Schema& schema) {
     valid_buttons.reserve(profile.button_binds.size());
     for (const ButtonBind& bind : profile.button_binds) {
         if (!schema.has_action(bind.action)) {
-            add_change(report,
-                       ReconcileChangeKind::RemovedMissingAction,
-                       profile.id,
-                       bind.device_button,
-                       bind.action,
-                       "removed missing action bind");
+            add_change(report, ReconcileChangeKind::RemovedMissingAction, profile.id,
+                       bind.device_button, bind.action, "removed missing action bind");
             continue;
         }
         bool duplicate = false;
@@ -51,12 +43,8 @@ ReconcileReport reconcile_profile(InputProfile& profile, const Schema& schema) {
             }
         }
         if (duplicate) {
-            add_change(report,
-                       ReconcileChangeKind::RemovedDuplicateButtonBind,
-                       profile.id,
-                       bind.device_button,
-                       bind.action,
-                       "removed duplicate button bind");
+            add_change(report, ReconcileChangeKind::RemovedDuplicateButtonBind, profile.id,
+                       bind.device_button, bind.action, "removed duplicate button bind");
             continue;
         }
         valid_buttons.push_back(bind);
@@ -67,12 +55,8 @@ ReconcileReport reconcile_profile(InputProfile& profile, const Schema& schema) {
     valid_axes_1d.reserve(profile.axis_1d_binds.size());
     for (const Axis1DBind& bind : profile.axis_1d_binds) {
         if (!schema.has_axis_1d(bind.axis_1d)) {
-            add_change(report,
-                       ReconcileChangeKind::RemovedMissingAxis1D,
-                       profile.id,
-                       bind.device_axis,
-                       bind.axis_1d,
-                       "removed missing 1d axis bind");
+            add_change(report, ReconcileChangeKind::RemovedMissingAxis1D, profile.id,
+                       bind.device_axis, bind.axis_1d, "removed missing 1d axis bind");
             continue;
         }
         bool duplicate = false;
@@ -83,12 +67,8 @@ ReconcileReport reconcile_profile(InputProfile& profile, const Schema& schema) {
             }
         }
         if (duplicate) {
-            add_change(report,
-                       ReconcileChangeKind::RemovedDuplicateAxis1DBind,
-                       profile.id,
-                       bind.device_axis,
-                       bind.axis_1d,
-                       "removed duplicate 1d axis bind");
+            add_change(report, ReconcileChangeKind::RemovedDuplicateAxis1DBind, profile.id,
+                       bind.device_axis, bind.axis_1d, "removed duplicate 1d axis bind");
             continue;
         }
         valid_axes_1d.push_back(bind);
@@ -99,12 +79,8 @@ ReconcileReport reconcile_profile(InputProfile& profile, const Schema& schema) {
     valid_axes_2d.reserve(profile.axis_2d_binds.size());
     for (const Axis2DBind& bind : profile.axis_2d_binds) {
         if (!schema.has_axis_2d(bind.axis_2d)) {
-            add_change(report,
-                       ReconcileChangeKind::RemovedMissingAxis2D,
-                       profile.id,
-                       bind.device_stick,
-                       bind.axis_2d,
-                       "removed missing 2d axis bind");
+            add_change(report, ReconcileChangeKind::RemovedMissingAxis2D, profile.id,
+                       bind.device_stick, bind.axis_2d, "removed missing 2d axis bind");
             continue;
         }
         bool duplicate = false;
@@ -115,12 +91,8 @@ ReconcileReport reconcile_profile(InputProfile& profile, const Schema& schema) {
             }
         }
         if (duplicate) {
-            add_change(report,
-                       ReconcileChangeKind::RemovedDuplicateAxis2DBind,
-                       profile.id,
-                       bind.device_stick,
-                       bind.axis_2d,
-                       "removed duplicate 2d axis bind");
+            add_change(report, ReconcileChangeKind::RemovedDuplicateAxis2DBind, profile.id,
+                       bind.device_stick, bind.axis_2d, "removed duplicate 2d axis bind");
             continue;
         }
         valid_axes_2d.push_back(bind);

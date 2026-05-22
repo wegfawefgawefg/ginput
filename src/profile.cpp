@@ -59,8 +59,7 @@ bool add_axis_2d_bind(InputProfile& profile, Axis2DBind bind) {
 }
 
 bool remove_button_bind(InputProfile& profile, ButtonBind bind) {
-    auto it = std::find_if(profile.button_binds.begin(),
-                           profile.button_binds.end(),
+    auto it = std::find_if(profile.button_binds.begin(), profile.button_binds.end(),
                            [&](const ButtonBind& existing) { return same_bind(existing, bind); });
     if (it == profile.button_binds.end()) {
         return false;
@@ -70,8 +69,7 @@ bool remove_button_bind(InputProfile& profile, ButtonBind bind) {
 }
 
 bool remove_axis_1d_bind(InputProfile& profile, Axis1DBind bind) {
-    auto it = std::find_if(profile.axis_1d_binds.begin(),
-                           profile.axis_1d_binds.end(),
+    auto it = std::find_if(profile.axis_1d_binds.begin(), profile.axis_1d_binds.end(),
                            [&](const Axis1DBind& existing) { return same_bind(existing, bind); });
     if (it == profile.axis_1d_binds.end()) {
         return false;
@@ -81,8 +79,7 @@ bool remove_axis_1d_bind(InputProfile& profile, Axis1DBind bind) {
 }
 
 bool remove_axis_2d_bind(InputProfile& profile, Axis2DBind bind) {
-    auto it = std::find_if(profile.axis_2d_binds.begin(),
-                           profile.axis_2d_binds.end(),
+    auto it = std::find_if(profile.axis_2d_binds.begin(), profile.axis_2d_binds.end(),
                            [&](const Axis2DBind& existing) { return same_bind(existing, bind); });
     if (it == profile.axis_2d_binds.end()) {
         return false;

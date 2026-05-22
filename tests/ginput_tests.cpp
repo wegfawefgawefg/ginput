@@ -66,7 +66,8 @@ void test_profile_helpers() {
     profile.name = "Default";
 
     require(ginput::add_button_bind(profile, ginput::ButtonBind{100, 1}), "add button bind");
-    require(!ginput::add_button_bind(profile, ginput::ButtonBind{100, 1}), "reject exact duplicate");
+    require(!ginput::add_button_bind(profile, ginput::ButtonBind{100, 1}),
+            "reject exact duplicate");
     require(ginput::add_button_bind(profile, ginput::ButtonBind{100, 2}),
             "allow same button to different action");
     require(profile.button_binds.size() == 2, "button bind count");

@@ -49,9 +49,8 @@ EncodedControl encode_axis_1d(DeviceAxis1D axis) {
 }
 
 EncodedControl encode_axis_2d(DeviceAxis2D axis) {
-    const std::uint32_t packed =
-        ((static_cast<std::uint32_t>(axis.y_code) & 0xffu) << 8u) |
-        (static_cast<std::uint32_t>(axis.x_code) & 0xffu);
+    const std::uint32_t packed = ((static_cast<std::uint32_t>(axis.y_code) & 0xffu) << 8u) |
+                                 (static_cast<std::uint32_t>(axis.x_code) & 0xffu);
     return encode_parts(axis.kind, axis.device_id, packed);
 }
 

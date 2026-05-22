@@ -14,10 +14,7 @@ const SchemaEntry* find_entry(const std::vector<SchemaEntry>& entries, int id) {
     return nullptr;
 }
 
-bool add_entry(std::vector<SchemaEntry>& entries,
-               int id,
-               std::string label,
-               std::string category,
+bool add_entry(std::vector<SchemaEntry>& entries, int id, std::string label, std::string category,
                int order) {
     if (find_entry(entries, id) != nullptr) {
         return false;

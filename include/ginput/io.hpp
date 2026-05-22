@@ -34,7 +34,8 @@ LoadProfilesResult load_profiles_file(const std::filesystem::path& path, const S
 
 bool save_profiles_string(const std::vector<InputProfile>& profiles, std::string& out,
                           std::string_view root_name = "input_profiles");
-bool save_profiles_file(const std::filesystem::path& path, const std::vector<InputProfile>& profiles,
+bool save_profiles_file(const std::filesystem::path& path,
+                        const std::vector<InputProfile>& profiles,
                         std::string_view root_name = "input_profiles");
 
 } // namespace ginput

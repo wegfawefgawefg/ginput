@@ -201,7 +201,8 @@ LoadProfilesResult load_profiles_string(std::string_view text, std::string_view 
         }
         InputProfile profile = parse_profile(child);
         if (profile.id <= 0 || profile.name.empty()) {
-            result.diagnostics.push_back(Diagnostic{"skipped profile with missing id or name", 1, 1});
+            result.diagnostics.push_back(
+                Diagnostic{"skipped profile with missing id or name", 1, 1});
             continue;
         }
         result.profiles.push_back(std::move(profile));
@@ -211,8 +212,7 @@ LoadProfilesResult load_profiles_string(std::string_view text, std::string_view 
     return result;
 }
 
-LoadProfilesResult load_profiles_string(std::string_view text,
-                                        const Schema& schema,
+LoadProfilesResult load_profiles_string(std::string_view text, const Schema& schema,
                                         std::string_view root_name) {
     LoadProfilesResult result = load_profiles_string(text, root_name);
     if (result.ok) {
@@ -221,7 +221,8 @@ LoadProfilesResult load_profiles_string(std::string_view text,
     return result;
 }
 
-LoadProfilesResult load_profiles_file(const std::filesystem::path& path, std::string_view root_name) {
+LoadProfilesResult load_profiles_file(const std::filesystem::path& path,
+                                      std::string_view root_name) {
     std::optional<std::string> text = read_file(path);
     if (!text) {
         return LoadProfilesResult{true, {}, {}, {}};
@@ -229,8 +230,7 @@ LoadProfilesResult load_profiles_file(const std::filesystem::path& path, std::st
     return load_profiles_string(*text, root_name);
 }
 
-LoadProfilesResult load_profiles_file(const std::filesystem::path& path,
-                                      const Schema& schema,
+LoadProfilesResult load_profiles_file(const std::filesystem::path& path, const Schema& schema,
                                       std::string_view root_name) {
     LoadProfilesResult result = load_profiles_file(path, root_name);
     if (result.ok) {
@@ -239,8 +239,7 @@ LoadProfilesResult load_profiles_file(const std::filesystem::path& path,
     return result;
 }
 
-bool save_profiles_string(const std::vector<InputProfile>& profiles,
-                          std::string& out,
+bool save_profiles_string(const std::vector<InputProfile>& profiles, std::string& out,
                           std::string_view root_name) {
     std::ostringstream stream;
     stream << "(" << root_name << "\n";
@@ -253,8 +252,7 @@ bool save_profiles_string(const std::vector<InputProfile>& profiles,
 }
 
 bool save_profiles_file(const std::filesystem::path& path,
-                        const std::vector<InputProfile>& profiles,
-                        std::string_view root_name) {
+                        const std::vector<InputProfile>& profiles, std::string_view root_name) {
     std::string text;
     if (!save_profiles_string(profiles, text, root_name)) {
         return false;
