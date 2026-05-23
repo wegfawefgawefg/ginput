@@ -36,6 +36,14 @@ std::optional<std::string> read_file(const std::filesystem::path& path) {
     return out.str();
 }
 
+std::optional<int> first_int(gsexp::FormView& view, std::string_view primary,
+                             std::string_view fallback) {
+    if (std::optional<int> value = view.get_int(primary)) {
+        return value;
+    }
+    return view.get_int(fallback);
+}
+
 bool write_file(const std::filesystem::path& path, std::string_view text) {
     if (path.has_parent_path()) {
         std::error_code ec;
@@ -62,7 +70,7 @@ void parse_button_binds(gsexp::Node node, InputProfile& profile) {
         }
         gsexp::FormView bind(child);
         std::optional<int> device_button = bind.get_int("device_button");
-        std::optional<int> action = bind.get_int("action");
+        std::optional<int> action = first_int(bind, "action", "gubsy_action");
         if (device_button && action) {
             add_button_bind(profile, ButtonBind{*device_button, *action});
         }
@@ -79,7 +87,7 @@ void parse_axis_1d_binds(gsexp::Node node, InputProfile& profile) {
         }
         gsexp::FormView bind(child);
         std::optional<int> device_axis = bind.get_int("device_axis");
-        std::optional<int> axis_1d = bind.get_int("axis_1d");
+        std::optional<int> axis_1d = first_int(bind, "axis_1d", "gubsy_analog");
         if (!device_axis || !axis_1d) {
             continue;
         }
@@ -104,7 +112,7 @@ void parse_axis_2d_binds(gsexp::Node node, InputProfile& profile) {
         }
         gsexp::FormView bind(child);
         std::optional<int> device_stick = bind.get_int("device_stick");
-        std::optional<int> axis_2d = bind.get_int("axis_2d");
+        std::optional<int> axis_2d = first_int(bind, "axis_2d", "gubsy_stick");
         if (!device_stick || !axis_2d) {
             continue;
         }
